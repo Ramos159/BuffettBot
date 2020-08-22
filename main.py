@@ -1,7 +1,6 @@
 import discord
 import logging
 import traceback
-import cogs
 from discord.ext import commands
 # from handlers.client_event_handlers import handle_on_message, handle_on_ready
 from settings import DISCORD_API_TOKEN
@@ -29,7 +28,7 @@ def determine_prefix():
 
 """These will be cogs i will impliment eventually"""
 cogs = [
-    'guild_logger',
+    'cogs.guild_logger',
     #     'events',
     #     'profile',
     #     'quote',
@@ -37,17 +36,19 @@ cogs = [
     #     'crypto',
     #     'portfolio',
     #     'option'
-    'invite'
+    'cogs.invite'
 ]
 
 if __name__ == "__main__":
-    bot = commands.Bot(command_prefix=determine_prefix)
-    bot.run(DISCORD_API_TOKEN)
+    bot = commands.Bot(command_prefix=determine_prefix())
 
     for cog in cogs:
+        # print(cog)
         try:
-            bot.load_extension("cogs.{}".format(cog))
-            print("Cog {} added successfully".format(cog))
+            bot.load_extension(cog)
+            print("{} added successfully".format(cog))
         except Exception as error:
-            logger.error("Error loading Cog {}".format(cog))
+            print("Error loading Cog {}".format(cog))
             traceback.print_exception(type(error), error, error.__traceback__)
+
+    bot.run(DISCORD_API_TOKEN, bot=True, reconnect=True)
