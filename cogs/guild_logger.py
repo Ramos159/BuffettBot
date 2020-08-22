@@ -5,17 +5,17 @@ from settings import GUILD_LOG_CHANNEL, BOT_LOG_CHANNEL, MEMBER_LOG_CHANNEL
 
 
 class GuildLogger(commands.Cog):
-    def __init__(self, client):
-        self.client = client
+    def __init__(self, bot):
+        self.bot = bot
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild):
-        channel = self.client.get_channel(GUILD_LOG_CHANNEL)
+        channel = self.bot.get_channel(GUILD_LOG_CHANNEL)
         await channel.send(self.guild_join_embed(guild))
 
     @commands.Cog.listener()
     async def on_guild_remove(self, guild):
-        channel = self.client.get_channel(GUILD_LOG_CHANNEL)
+        channel = self.bot.get_channel(GUILD_LOG_CHANNEL)
         await channel.send(self.guild_remove_embed(guild))
 
     def get_current_date_time(self):
@@ -46,3 +46,6 @@ class GuildLogger(commands.Cog):
         embed.add_field(name="ID", value=guild.id)
         embed.set_footer(text=self.get_current_date_time())
         return embed
+
+    def setup(self, bot):
+        self.bot.add_cog(GuildLogger(bot))

@@ -1,7 +1,9 @@
 import discord
-from discord.ext import commands
 import logging
-from handlers.client_event_handlers import handle_on_message, handle_on_ready
+import traceback
+import cogs
+from discord.ext import commands
+# from handlers.client_event_handlers import handle_on_message, handle_on_ready
 from settings import DISCORD_API_TOKEN
 
 """set up logger. maybe later ill find a way to send the logs as a message to a channel."""
@@ -14,9 +16,9 @@ handler.setFormatter(logging.Formatter(
 logger.addHandler(handler)
 
 
-@bot.event
-async def on_ready():
-    handle_on_ready(bot)
+# @bot.event
+# async def on_ready():
+#     handle_on_ready(bot)
 
 
 def determine_prefix():
@@ -26,17 +28,26 @@ def determine_prefix():
 
 
 """These will be cogs i will impliment eventually"""
-# cogs = [
-# 'guild_logger'
-#     'events',
-#     'profile',
-#     'quote',
-#     'stock',
-#     'crypto',
-#     'portfolio',
-#     'option'
-# 'invite'
-# ]
+cogs = [
+    'guild_logger',
+    #     'events',
+    #     'profile',
+    #     'quote',
+    #     'stock',
+    #     'crypto',
+    #     'portfolio',
+    #     'option'
+    'invite'
+]
 
-bot = commands.Bot(command_prefix=determine_prefix)
-bot.run(DISCORD_API_TOKEN)
+if __name__ == "__main__":
+    bot = commands.Bot(command_prefix=determine_prefix)
+    bot.run(DISCORD_API_TOKEN)
+
+    for cog in cogs:
+        try:
+            bot.load_extension("cogs.{}".format(cog))
+            print("Cog {} added successfully".format(cog))
+        except Exception as error:
+            logger.error("Error loading Cog {}".format(cog))
+            traceback.print_exception(type(error), error, error.__traceback__)
