@@ -1,4 +1,5 @@
 import discord
+from discord.ext import commands
 import logging
 from handlers.client_event_handlers import handle_on_message, handle_on_ready
 from settings import DISCORD_API_TOKEN
@@ -13,18 +14,20 @@ handler.setFormatter(logging.Formatter(
 logger.addHandler(handler)
 
 
-@client.event
+@bot.event
 async def on_ready():
-    handle_on_ready(client)
+    handle_on_ready(bot)
 
 
-@client.event
-async def on_message(client, message):
-    handle_on_message(client, message)
+def determine_prefix():
+    """This will eventually use a database to get the guild prefix, for now we just use ?"""
+
+    return '?'
 
 
 """These will be cogs i will impliment eventually"""
 # cogs = [
+# 'guild_logger'
 #     'events',
 #     'profile',
 #     'quote',
@@ -32,8 +35,8 @@ async def on_message(client, message):
 #     'crypto',
 #     'portfolio',
 #     'option'
+# 'invite'
 # ]
 
-
-client = discord.Client()
-client.run(DISCORD_API_TOKEN)
+bot = commands.Bot(command_prefix=determine_prefix)
+bot.run(DISCORD_API_TOKEN)
