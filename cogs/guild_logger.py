@@ -1,7 +1,8 @@
 import discord
 from discord.ext import commands
 from datetime import datetime
-from settings import GUILD_LOG_CHANNEL, BOT_LOG_CHANNEL, MEMBER_LOG_CHANNEL
+# from random import randint
+from settings import GUILD_LOG_CHANNEL
 
 
 class GuildLogger(commands.Cog):
@@ -20,6 +21,9 @@ class GuildLogger(commands.Cog):
     ----------
     bot : Bot
         Bot instance from main.py
+
+    guild_log : int
+        number id for guild log channel
 
     Methods
     -------
@@ -41,6 +45,7 @@ class GuildLogger(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        self.guild_log = int(GUILD_LOG_CHANNEL)
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild):
@@ -57,9 +62,8 @@ class GuildLogger(commands.Cog):
         None
             The bot will simply send an embed to the guild log channel
         """
-
-        channel = self.bot.get_channel(GUILD_LOG_CHANNEL)
-        await channel.send(self.guild_join_embed(guild))
+        channel = self.bot.get_channel(self.guild_log)
+        await channel.send(embed=self.guild_join_embed(guild))
 
     @commands.Cog.listener()
     async def on_guild_remove(self, guild):
@@ -79,8 +83,8 @@ class GuildLogger(commands.Cog):
             The bot will simply send an embed to the guild log channel
         """
 
-        channel = self.bot.get_channel(GUILD_LOG_CHANNEL)
-        await channel.send(self.guild_remove_embed(guild))
+        channel = self.bot.get_channel(self.guild_log)
+        await channel.send(embed=self.guild_remove_embed(guild))
 
     def get_current_date_time(self):
         """
@@ -95,7 +99,7 @@ class GuildLogger(commands.Cog):
             This will be a string in the format of m/d/y h:m using current time
         """
         now = datetime.now()
-        dt_string = now.strftime("%m/%d/%Y %H:%M:")
+        dt_string = now.strftime("%m/%d/%Y %H:%M")
         return dt_string
 
     def guild_join_embed(self, guild):
@@ -116,9 +120,10 @@ class GuildLogger(commands.Cog):
         """
 
         embed = discord.Embed()
+        embed.color = discord.Color.green()
         embed.title = "Guild Join"
         embed.type = "rich"
-        embed.set_thumbnail(url=guild.icon)
+        embed.set_thumbnail(url=guild.icon_url)
         embed.add_field(name="Server Name", value=guild.name)
         embed.add_field(name="Server Description", value=guild.description)
         embed.add_field(name="Region", value=guild.region)
@@ -144,9 +149,10 @@ class GuildLogger(commands.Cog):
         """
 
         embed = discord.Embed()
+        embed.color = discord.Color.red()
         embed.title = "Guild Leave"
         embed.type = "rich"
-        embed.set_thumbnail(url=guild.icon)
+        embed.set_thumbnail(url=guild.icon_url)
         embed.add_field(name="Server Name", value=guild.name)
         embed.add_field(name="Server Description", value=guild.description)
         embed.add_field(name="Region", value=guild.region)
