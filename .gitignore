@@ -2,3 +2,4 @@
 __pycache__
 bot-env/
 discord.log
+cogs/__pycache__

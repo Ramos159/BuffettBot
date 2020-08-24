@@ -5,7 +5,39 @@ from settings import GUILD_LOG_CHANNEL, BOT_LOG_CHANNEL, MEMBER_LOG_CHANNEL
 
 
 class GuildLogger(commands.Cog):
-    """Guild Logger Module"""
+    """
+    Guild Logger Module
+
+    Tracks what servers the bot leaves and joins
+
+    Sends embeds into special channels on leaves and joins
+
+    Inherits from the Cog class, this is required by the library
+
+    ...
+
+    Attributes
+    ----------
+    bot : Bot
+        Bot instance from main.py
+
+    Methods
+    -------
+    on_guild_join() -> None
+        Event listener that fires when bot joins a server
+
+    on_guild_remove() -> None
+        Event listener that fires when bot leaves a server
+
+    get_current_date_time() -> str
+        Makes a timestamp string using datetime and returns it 
+
+    guild_join_embed(guild) -> Embed
+        Makes and returns embed with info about the guild bot joined
+
+    guild_leave_embed(guild) -> Embed
+        Makes and returns embed with info about the guild bot left
+    """
 
     def __init__(self, bot):
         self.bot = bot
@@ -13,8 +45,17 @@ class GuildLogger(commands.Cog):
     @commands.Cog.listener()
     async def on_guild_join(self, guild):
         """
-        Function fired when the bot joins a guild\n
-        Returns an embed to the guild log
+        Fired when the bot joins a guild
+
+        Params
+        ------
+        guild : Guild
+            Guild or "Server" that which the bot joined
+
+        Returns
+        -------
+        None
+            The bot will simply send an embed to the guild log channel
         """
 
         channel = self.bot.get_channel(GUILD_LOG_CHANNEL)
@@ -23,20 +64,56 @@ class GuildLogger(commands.Cog):
     @commands.Cog.listener()
     async def on_guild_remove(self, guild):
         """
-        Function fired when the bot leaves a guild\n
-        Returns an embed to the guild log
+        Fired when the bot leaves a guild
+
+        ...
+
+        Params
+        ------
+        guild : Guild
+            Guild or "Server" that which the bot joined
+
+        Returns
+        -------
+        None
+            The bot will simply send an embed to the guild log channel
         """
 
         channel = self.bot.get_channel(GUILD_LOG_CHANNEL)
         await channel.send(self.guild_remove_embed(guild))
 
     def get_current_date_time(self):
+        """
+        Makes a string from the current time and date\n
+        Uses the datetime module
+
+        ...
+
+        Return
+        ------
+        str 
+            This will be a string in the format of m/d/y h:m using current time
+        """
         now = datetime.now()
-        dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+        dt_string = now.strftime("%m/%d/%Y %H:%M:")
         return dt_string
 
     def guild_join_embed(self, guild):
-        """Makess an embed for the guild log on join"""
+        """
+        Makes an embed for the guild log on join
+
+        ...
+
+        Params
+        ------
+        guild : Guild
+            Guild or "Server" that which the bot joined
+
+        Returns
+        -------
+        Embed
+            Discord rich embed with information regarding the guild joined
+        """
 
         embed = discord.Embed()
         embed.title = "Guild Join"
@@ -50,7 +127,21 @@ class GuildLogger(commands.Cog):
         return embed
 
     def guild_remove_embed(self, guild):
-        """Makes an embed for the guild log on leave"""
+        """
+        Makes an embed for the guild log on leave
+
+        ...
+
+        Params
+        ------
+        guild : Guild
+            Guild or "Server" that which the bot left
+
+        Returns
+        -------
+        Embed
+            Discord rich embed with information regarding the guild left
+        """
 
         embed = discord.Embed()
         embed.title = "Guild Leave"
@@ -65,4 +156,19 @@ class GuildLogger(commands.Cog):
 
 
 def setup(bot):
+    """
+    Setup function for Cog class in file
+
+    Ran when cog is loaded VIA load_extension() in main.py
+
+    The bot param is automatically passed in during loading
+
+    ...
+
+    Parameters
+    ----------
+    bot: Bot
+        Bot instance from main.py
+    """
+
     bot.add_cog(GuildLogger(bot))

@@ -2,7 +2,6 @@ import discord
 import logging
 import traceback
 from discord.ext import commands
-# from handlers.client_event_handlers import handle_on_message, handle_on_ready
 from settings import DISCORD_API_TOKEN
 
 """set up logger. maybe later ill find a way to send the logs as a message to a channel."""
@@ -15,15 +14,18 @@ handler.setFormatter(logging.Formatter(
 logger.addHandler(handler)
 
 
-# @bot.event
-# async def on_ready():
-#     handle_on_ready(bot)
-
-
 def determine_prefix():
     """This will eventually use a database to get the guild prefix, for now we just use ?"""
 
     return '?'
+
+
+bot = commands.Bot(command_prefix=determine_prefix())
+
+
+@bot.event
+async def on_ready():
+    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="the tendies"))
 
 
 """These will be cogs i will impliment eventually"""
@@ -36,11 +38,10 @@ cogs = [
     #     'crypto',
     #     'portfolio',
     #     'option'
-    'cogs.invite'
+    'cogs.info'
 ]
 
 if __name__ == "__main__":
-    bot = commands.Bot(command_prefix=determine_prefix())
 
     for cog in cogs:
         # print(cog)
