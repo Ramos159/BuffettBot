@@ -1,12 +1,14 @@
 import discord
 import finnhub
+import requests
 from discord.ext import commands
-from settings import FINNHUB_API_TOKEN
+from random import randint
+from settings import FINNHUB_TOKEN
 
 
 class Stock(commands.Cog):
     """
-    Stock Module 
+    Stock Module.
 
     Deals with anything/everything related to stocks
 
@@ -36,7 +38,7 @@ class Stock(commands.Cog):
         """
         """
         self.bot = bot
-        self.api = finnhub.Client(api_key=FINNHUB_API_TOKEN)
+        self.api = finnhub.Client(api_key=FINNHUB_TOKEN)
 
     @commands.group()
     async def stock(self, ctx):
@@ -45,18 +47,66 @@ class Stock(commands.Cog):
 
     @stock.command()
     async def quote(self, ctx, symbol=None):
-        """Get a quote with the message arguement"""
+        """Get a quote for a symbol"""
         if symbol is None:
             await ctx.send("Please provide a symbol for the `stock quote` command")
             return
 
-        quote = self.api.quote(symbol.upper())
+        try:
+            quote = self.api.quote(symbol.upper())
+        except finnhub.FinnhubAPIException:
+            await ctx.send("`Finnhub API Limit reached, try again later`")
+            return
 
         if not quote:
             await ctx.send("Please provide a valid symbol for the `stock quote` command")
             return
 
-        await ctx.send(":)")
+        embed = discord.Embed()
+
+        embed.title = f"{symbol.upper()}"
+        embed.color = randint(0, 0xffffff)
+        embed.add_field(name="Current", value=f"${quote['c']}")
+        embed.add_field(name="High", value=f"${quote['h']}")
+        embed.add_field(name="Low", value=f"${quote['l']}")
+        embed.add_field(name="Opening", value=f"${quote['o']}")
+        embed.add_field(name="Previous Closing", value=f"${quote['pc']}")
+
+        await ctx.send(embed=embed)
+
+    @stock.command()
+    async def info(self, ctx, symbol=None):
+        """Get company info from a symbol"""
+        if symbol is None:
+            await ctx.send("Please provide a symbol for the `stock info` command")
+            return
+
+        try:
+            quote = self.api.company_profile2(symbol=symbol.upper())
+        except finnhub.FinnhubAPIException:
+            await ctx.send("`Finnhub API Limit reached, try again later`")
+            return
+
+        if not quote:
+            await ctx.send("Please provide a valid symbol for the `stock info` command")
+            return
+
+        embed = discord.Embed()
+
+        embed.title = f"{quote['name']}"
+        embed.color = randint(0, 0xffffff)
+        embed.set_thumbnail(url=quote["logo"])
+        embed.add_field(name="Ticker", value=f"{quote['ticker']}")
+        embed.add_field(name="Industry", value=f"{quote['finnhubIndustry']}")
+        embed.add_field(name="Exchange", value=f"{quote['exchange']}")
+        embed.add_field(name="Market Cap",
+                        value=f"{quote['marketCapitalization']}")
+        embed.add_field(name="Outstanding",
+                        value=f"{quote['shareOutstanding']}")
+        embed.add_field(name="IPO", value=f"{quote['ipo']}")
+        embed.set_footer(text=quote['weburl'])
+
+        await ctx.send(embed=embed)
 
 
 def setup(bot):
@@ -72,7 +122,7 @@ def setup(bot):
     Parameters
     ----------
     bot: Bot
-        Bot instance from main.py 
+        Bot instance from main.py
     """
 
     bot.add_cog(Stock(bot))

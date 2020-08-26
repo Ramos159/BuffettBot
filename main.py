@@ -2,7 +2,7 @@ import discord
 import logging
 import traceback
 from discord.ext import commands
-from settings import DISCORD_API_TOKEN
+from settings import DISCORD_TOKEN
 
 """set up logger. maybe later ill find a way to send the logs as a message to a channel."""
 logger = logging.getLogger('discord')
@@ -51,4 +51,4 @@ if __name__ == "__main__":
             print(f"Error loading Cog: {cog}")
             traceback.print_exception(type(error), error, error.__traceback__)
 
-    bot.run(DISCORD_API_TOKEN, bot=True, reconnect=True)
+    bot.run(DISCORD_TOKEN, bot=True, reconnect=True)

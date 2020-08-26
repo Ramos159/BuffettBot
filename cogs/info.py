@@ -30,6 +30,8 @@ class Info(commands.Cog):
     contact() -> None
         sends a message detailing method of contact to owner
 
+    stock() -> None
+        sends a message about the source of stock information
     """
 
     def __init__(self, bot):
@@ -74,12 +76,18 @@ class Info(commands.Cog):
     @info.command()
     async def contact(self, ctx):
         """
-        Sends contact info for owner 
+        Sends contact info for owner.
         """
 
         await ctx.send(
             f">>> If you want to gift someone Tesla stock, **edwin#9454** will gladly accept them"
         )
+
+    @info.command()
+    async def stock(self, ctx):
+        """Sends information about stock info source"""
+
+        await ctx.send(">>> We use https://finnhub.io/ information for all our stock related commands.")
 
 
 def setup(bot):
