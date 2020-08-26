@@ -31,7 +31,10 @@ class Stock(commands.Cog):
         Sets up stock command group
 
     quote() -> None
-        Sends an embed containing quote information for a provided stock
+        Sends an embed containing quote information for a provided symbol
+
+    info() -> None
+        Sends an embed containing company information for the provided symbol
     """
 
     def __init__(self, bot):
@@ -42,12 +45,12 @@ class Stock(commands.Cog):
 
     @commands.group()
     async def stock(self, ctx):
-        """Sell/Buy or get various inforamtion regarding stocks"""
+        """Sell/Buy or get various inforamtion regarding stocks."""
         return
 
     @stock.command()
     async def quote(self, ctx, symbol=None):
-        """Get a quote for a symbol"""
+        """Get a quote for a symbol."""
         if symbol is None:
             await ctx.send("Please provide a symbol for the `stock quote` command")
             return
@@ -76,42 +79,79 @@ class Stock(commands.Cog):
 
     @stock.command()
     async def info(self, ctx, symbol=None):
-        """Get company info from a symbol"""
+        """Get company info from a symbol."""
         if symbol is None:
             await ctx.send("Please provide a symbol for the `stock info` command")
             return
 
         try:
-            quote = self.api.company_profile2(symbol=symbol.upper())
+            info = self.api.company_profile2(symbol=symbol.upper())
         except finnhub.FinnhubAPIException:
             await ctx.send("`Finnhub API Limit reached, try again later`")
             return
 
-        if not quote:
+        if not info:
             await ctx.send("Please provide a valid symbol for the `stock info` command")
             return
 
         embed = discord.Embed()
 
-        embed.title = f"{quote['name']}"
+        embed.title = f"{info['name']}"
         embed.color = randint(0, 0xffffff)
-        embed.set_thumbnail(url=quote["logo"])
-        embed.add_field(name="Ticker", value=f"{quote['ticker']}")
-        embed.add_field(name="Industry", value=f"{quote['finnhubIndustry']}")
-        embed.add_field(name="Exchange", value=f"{quote['exchange']}")
+        embed.set_thumbnail(url=info["logo"])
+        embed.add_field(name="Ticker", value=f"{info['ticker']}")
+        embed.add_field(name="Industry", value=f"{info['finnhubIndustry']}")
+        embed.add_field(name="Exchange", value=f"{info['exchange']}")
         embed.add_field(name="Market Cap",
-                        value=f"{quote['marketCapitalization']}")
+                        value=f"{info['marketCapitalization']}")
         embed.add_field(name="Outstanding",
-                        value=f"{quote['shareOutstanding']}")
-        embed.add_field(name="IPO", value=f"{quote['ipo']}")
-        embed.set_footer(text=quote['weburl'])
+                        value=f"{info['shareOutstanding']}")
+        embed.add_field(name="IPO", value=f"{info['ipo']}")
+        embed.set_footer(text=info['weburl'])
+
+        await ctx.send(embed=embed)
+
+    @stock.command()
+    async def sentiment(self, ctx, symbol=None):
+        """Get Sentiment stats surrounding a company from a symbol."""
+        if symbol is None:
+            await ctx.send("Please provide a symbol for the `stock sentiment` command")
+            return
+
+        try:
+            sent = self.api.news_sentiment(symbol.upper())
+        except finnhub.FinnhubAPIException:
+            await ctx.send("`Finnhub API Limit reached, try again later`")
+            return
+
+        if not sent:
+            await ctx.send("Please provide a valid symbol for the `stock sentiment` command")
+            return
+
+        embed = discord.Embed()
+
+        # Finnhub API gives me decimals no greater than 0, need to multiply and round number
+        embed.title = f"{sent['symbol']} Sentiment Report"
+        embed.color = randint(0, 0xffffff)
+        embed.add_field(
+            name='Bullish', value=f"{round(sent['sentiment']['bullishPercent'] * 100 )}%")
+        embed.add_field(name="Sector Avg. Bullish",
+                        value=f"{round(sent['sectorAverageBullishPercent']) * 100}%")
+        embed.add_field(name="Article Buzz",
+                        value=f"{round(sent['buzz']['buzz']) * 100}%")
+        embed.add_field(name="Week Article Count",
+                        value=f"{round(sent['buzz']['articlesInLastWeek'])}")
+        embed.add_field(name="News Score",
+                        value=f"{round(sent['companyNewsScore'] * 100)}%")
+        embed.add_field(name="Sector Avg. News Score",
+                        value=f"{round(sent['sectorAverageNewsScore']) * 100}%")
 
         await ctx.send(embed=embed)
 
 
 def setup(bot):
     """
-    Setup function for Cog class in file
+    Setup function for Cog class in file.
 
     Ran when cog is loaded VIA load_extension() in main.py
 
