@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+FINNHUB_API_TOKEN = os.getenv("FINMHUB_API_TOKEN")
 DISCORD_API_TOKEN = os.getenv("DISCORD_API_TOKEN")
 GUILD_LOG_CHANNEL = os.getenv("GUILD_LOG_CHANNEL")
 MEMBER_LOG_CHANNEL = os.getenv("MEMBER_LOG_CHANNEL")

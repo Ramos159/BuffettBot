@@ -19,7 +19,7 @@ class GuildLogger(commands.Cog):
 
     Attributes
     ----------
-    bot : Bot
+    bot : commands.Bot
         Bot instance from main.py
 
     guild_log : int

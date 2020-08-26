@@ -13,7 +13,7 @@ class Info(commands.Cog):
 
     Attributes
     ----------
-    bot : Bot
+    bot : commands.Bot
         Bot instance from main.py
 
     Methods

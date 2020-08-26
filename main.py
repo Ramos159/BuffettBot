@@ -30,26 +30,25 @@ async def on_ready():
 
 """These will be cogs i will impliment eventually"""
 cogs = [
-    'cogs.guild_logger',
+    'guild_logger',
     #     'events',
     #     'profile',
     #     'quote',
-    #     'stock',
+    'stock',
     #     'crypto',
     #     'portfolio',
     #     'option'
-    'cogs.info'
+    'info'
 ]
 
 if __name__ == "__main__":
 
     for cog in cogs:
-        # print(cog)
         try:
-            bot.load_extension(cog)
-            print("{} added successfully".format(cog))
+            bot.load_extension(f"cogs.{cog}")
+            print(f"cog: {cog} added successfully")
         except Exception as error:
-            print("Error loading Cog {}".format(cog))
+            print(f"Error loading Cog: {cog}")
             traceback.print_exception(type(error), error, error.__traceback__)
 
     bot.run(DISCORD_API_TOKEN, bot=True, reconnect=True)
