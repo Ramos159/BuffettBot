@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 from datetime import datetime
+from models.models import GuildSetting
 # from random import randint
 from settings import GUILD_LOG_CHANNEL
 
@@ -50,7 +51,9 @@ class GuildLogger(commands.Cog):
     @commands.Cog.listener()
     async def on_guild_join(self, guild):
         """
-        Fired when the bot joins a guild
+        Fired when the bot joins a guild.
+
+        Creates a record of Guild Settings if one doesnt exist for the guild
 
         Params
         ------
@@ -62,6 +65,11 @@ class GuildLogger(commands.Cog):
         None
             The bot will simply send an embed to the guild log channel
         """
+        try:
+            guild = GuildSetting.get(GuildSetting.discord_ID == guild.id)
+        except:
+            GuildSetting.create(discord_ID=guild.id)
+
         channel = self.bot.get_channel(self.guild_log)
         await channel.send(embed=self.guild_join_embed(guild))
 
@@ -159,6 +167,20 @@ class GuildLogger(commands.Cog):
         embed.add_field(name="ID", value=guild.id)
         embed.set_footer(text=self.get_current_date_time())
         return embed
+
+    async def create_bot_log(self, guild, err):
+        """Creates an embed with details concerning an err and sends it to the log channel."""
+        channel = self.bot.get_channel(self.guild_log)
+
+        embed = discord.Embed()
+        embed.title = "Error Log"
+        embed.description = str(f"`{err}`")
+        embed.set_thumbnail(url=guild.icon_url)
+        embed.add_field(name="Guild", value=f"{guild.name}")
+        embed.add_field(name="Guild ID", value=f"{guild.id}")
+        embed.set_footer(text=self.get_current_date_time())
+
+        await channel.send(embed=embed)
 
 
 def setup(bot):

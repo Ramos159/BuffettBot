@@ -1,8 +1,11 @@
 import discord
 import logging
 import traceback
+from peewee import SqliteDatabase
 from discord.ext import commands
 from settings import DISCORD_TOKEN
+from models.models import GuildSetting
+
 
 """set up logger. maybe later ill find a way to send the logs as a message to a channel."""
 logger = logging.getLogger('discord')
@@ -14,13 +17,15 @@ handler.setFormatter(logging.Formatter(
 logger.addHandler(handler)
 
 
-def determine_prefix():
-    """This will eventually use a database to get the guild prefix, for now we just use ?"""
+def determine_prefix(bot, message):
+    """Self Explanitory"""
+    guild_id = message.guild.id
+    guild = GuildSetting.get(GuildSetting.discord_ID == guild_id)
 
-    return '?'
+    return guild.prefix
 
 
-bot = commands.Bot(command_prefix=determine_prefix())
+bot = commands.Bot(command_prefix=determine_prefix)
 
 
 @bot.event
@@ -31,6 +36,7 @@ async def on_ready():
 """These will be cogs i will impliment eventually"""
 cogs = [
     'guild_logger',
+    'config',
     #     'events',
     #     'profile',
     #     'quote',

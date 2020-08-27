@@ -1,4 +1,5 @@
 .env
+database.db
 __pycache__
 bot-env/
 discord.log

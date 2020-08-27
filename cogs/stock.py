@@ -1,9 +1,11 @@
 import discord
 import finnhub
 import requests
+from datetime import datetime
 from discord.ext import commands
 from random import randint
 from settings import FINNHUB_TOKEN
+from settings import BOT_LOG_CHANNEL
 
 
 class Stock(commands.Cog):
@@ -42,6 +44,42 @@ class Stock(commands.Cog):
         """
         self.bot = bot
         self.api = finnhub.Client(api_key=FINNHUB_TOKEN)
+        self.log = int(BOT_LOG_CHANNEL)
+
+    async def create_bot_log(self, ctx, err):
+        """Creates an embed with details concerning an err and sends it to the log channel."""
+        channel = self.bot.get_channel(self.log)
+
+        embed = discord.Embed()
+
+        embed.title = "Finnhub API Error"
+        embed.description = str(f"`{err}`")
+        embed.set_thumbnail(url=ctx.guild.icon_url)
+        embed.add_field(name="Guild", value=f"{ctx.guild}")
+        embed.add_field(name="Guild ID", value=f"{ctx.guild.id}")
+        embed.add_field(name="Message", value=f"{ctx.message.content}")
+        embed.add_field(name="Message ID", value=f"{ctx.message.id}")
+        embed.add_field(name="User", value=f"{ctx.message.author.name}")
+        embed.add_field(name="User ID", value=f"{ctx.message.author.id}")
+        embed.set_footer(text=self.get_current_date_time())
+
+        await channel.send(embed=embed)
+
+    def get_current_date_time(self):
+        """
+        Makes a string from the current time and date\n
+        Uses the datetime module
+
+        ...
+
+        Return
+        ------
+        str 
+            This will be a string in the format of m/d/y h:m using current time
+        """
+        now = datetime.now()
+        dt_string = now.strftime("%m/%d/%Y %H:%M")
+        return dt_string
 
     @commands.group()
     async def stock(self, ctx):
@@ -57,7 +95,8 @@ class Stock(commands.Cog):
 
         try:
             quote = self.api.quote(symbol.upper())
-        except finnhub.FinnhubAPIException:
+        except finnhub.FinnhubAPIException as err:
+            await self.create_bot_log(ctx, err)
             await ctx.send("`Finnhub API Limit reached, try again later`")
             return
 
@@ -86,7 +125,8 @@ class Stock(commands.Cog):
 
         try:
             info = self.api.company_profile2(symbol=symbol.upper())
-        except finnhub.FinnhubAPIException:
+        except finnhub.FinnhubAPIException as err:
+            await self.create_bot_log(ctx, err)
             await ctx.send("`Finnhub API Limit reached, try again later`")
             return
 
@@ -105,9 +145,9 @@ class Stock(commands.Cog):
         embed.add_field(name="Market Cap",
                         value=f"{info['marketCapitalization']}")
         embed.add_field(name="Outstanding",
-                        value=f"{info['shareOutstanding']}")
+                        value=f"{round(info['shareOutstanding'],2)}")
         embed.add_field(name="IPO", value=f"{info['ipo']}")
-        embed.set_footer(text=info['weburl'])
+        embed.url = info['weburl']
 
         await ctx.send(embed=embed)
 
@@ -120,8 +160,10 @@ class Stock(commands.Cog):
 
         try:
             sent = self.api.news_sentiment(symbol.upper())
-        except finnhub.FinnhubAPIException:
+        except finnhub.FinnhubAPIException as err:
+            await self.create_bot_log(ctx, err)
             await ctx.send("`Finnhub API Limit reached, try again later`")
+
             return
 
         if not sent:

@@ -1,9 +1,10 @@
 import os
+from peewee import SqliteDatabase
 from dotenv import load_dotenv
 
 load_dotenv()
 
-FINNHUB_TOKEN = os.getenv("FINMHUB_TOKEN")
+FINNHUB_TOKEN = os.getenv("FINNHUB_TOKEN")
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 GUILD_LOG_CHANNEL = os.getenv("GUILD_LOG_CHANNEL")
 MEMBER_LOG_CHANNEL = os.getenv("MEMBER_LOG_CHANNEL")
