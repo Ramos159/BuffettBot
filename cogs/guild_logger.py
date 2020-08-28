@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from datetime import datetime
-from models.models import GuildSetting
+from models import GuildSetting, Guild
 # from random import randint
 from settings import GUILD_LOG_CHANNEL
 
@@ -25,23 +25,6 @@ class GuildLogger(commands.Cog):
 
     guild_log : int
         number id for guild log channel
-
-    Methods
-    -------
-    on_guild_join() -> None
-        Event listener that fires when bot joins a server
-
-    on_guild_remove() -> None
-        Event listener that fires when bot leaves a server
-
-    get_current_date_time() -> str
-        Makes a timestamp string using datetime and returns it 
-
-    guild_join_embed(guild) -> Embed
-        Makes and returns embed with info about the guild bot joined
-
-    guild_leave_embed(guild) -> Embed
-        Makes and returns embed with info about the guild bot left
     """
 
     def __init__(self, bot):
@@ -65,10 +48,12 @@ class GuildLogger(commands.Cog):
         None
             The bot will simply send an embed to the guild log channel
         """
-        try:
-            guild = GuildSetting.get(GuildSetting.discord_ID == guild.id)
-        except:
-            GuildSetting.create(discord_ID=guild.id)
+
+        new_guild = Guild.get_or_none(Guild.discord_id == guild.id)
+
+        if new_guild is None:
+            new_guild = Guild.create(discord_id=guild.id)
+            GuildSetting.create(guild=new_guild)
 
         channel = self.bot.get_channel(self.guild_log)
         await channel.send(embed=self.guild_join_embed(guild))

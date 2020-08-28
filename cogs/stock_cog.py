@@ -1,42 +1,22 @@
 import discord
 import finnhub
-import requests
+import websocket
+import threading
 from datetime import datetime
 from discord.ext import commands
 from random import randint
-from settings import FINNHUB_TOKEN
-from settings import BOT_LOG_CHANNEL
+from models import Guild, GuildStock, Stock
+from main import BOT
+from settings import FINNHUB_TOKEN, BOT_LOG_CHANNEL
 
 
-class Stock(commands.Cog):
+class StockCog(commands.Cog):
     """
     Stock Module.
 
     Deals with anything/everything related to stocks
 
     Inherits from Cog class, as is requiered by the library
-
-    ...
-
-    Attributes
-    ----------
-    bot: commands.Bot
-        The bot instance from main.py
-
-    api: finnhub.Client
-        the finnhub api we use to receive stock information
-
-
-    Methods
-    -------
-    stock() -> None
-        Sets up stock command group
-
-    quote() -> None
-        Sends an embed containing quote information for a provided symbol
-
-    info() -> None
-        Sends an embed containing company information for the provided symbol
     """
 
     def __init__(self, bot):
@@ -74,7 +54,7 @@ class Stock(commands.Cog):
 
         Return
         ------
-        str 
+        str
             This will be a string in the format of m/d/y h:m using current time
         """
         now = datetime.now()
@@ -89,6 +69,7 @@ class Stock(commands.Cog):
     @stock.command()
     async def quote(self, ctx, symbol=None):
         """Get a quote for a symbol."""
+        await ctx.trigger_typing()
         if symbol is None:
             await ctx.send("Please provide a symbol for the `stock quote` command")
             return
@@ -119,6 +100,7 @@ class Stock(commands.Cog):
     @stock.command()
     async def info(self, ctx, symbol=None):
         """Get company info from a symbol."""
+        await ctx.trigger_typing()
         if symbol is None:
             await ctx.send("Please provide a symbol for the `stock info` command")
             return
@@ -154,6 +136,7 @@ class Stock(commands.Cog):
     @stock.command()
     async def sentiment(self, ctx, symbol=None):
         """Get Sentiment stats surrounding a company from a symbol."""
+        await ctx.trigger_typing()
         if symbol is None:
             await ctx.send("Please provide a symbol for the `stock sentiment` command")
             return
@@ -191,6 +174,90 @@ class Stock(commands.Cog):
         await ctx.send(embed=embed)
 
 
+def create_trade_embed(data):
+
+    time = datetime.utcfromtimestamp(int(data['t'])).strftime('%Y-%m-%d %H:%M')
+
+    embed = discord.Embed()
+    embed.title = f"New Trade: {data['s']}"
+    embed.add_field(name="Price", value=f"${data['p']}")
+    embed.add_field(name="Volume", value=f"${data['v']}")
+    embed.set_footer(text=time)
+
+    return embed
+
+
+async def on_message(ws, message):
+    print("getting message")
+
+    for trade in message['data']:
+        # all the guilds who have an interest in this trade symbol
+        query = (Guild
+                 .select()
+                 .join(GuildStock)
+                 .join(Stock)
+                 .where(Stock.symbol == trade['s']))
+
+        for guild in query:
+            # new_guild = BOT.get_guild(guild.discord_ID)
+            channel = BOT.get_channel(guild.news_channel_id)
+            await channel.send(embed=create_trade_embed(trade))
+
+            # symbols = []
+
+            # for data in message['data']:
+            #     symbols.append(data['s'])
+
+            # guilds = GuildStockInterest.select().where
+
+            # revelant_guilds = list(
+            #     filter(lambda guild: guild.symbol in symbols is True, guilds))
+
+            # for guild in revelant_guilds:
+            # new_guild = bot.get_guild(guild.discord_ID)
+            # channel = bot.get_channel(new_guild.news_channel_id)
+            # channel.send(embed=create_trade_embed())
+
+            # for data in message['data']:
+            #     for guild in table[data]:
+
+    return
+
+
+def on_error(ws, err):
+    print(err)
+    return
+
+
+def on_close(ws):
+    print("Stock socket closed")
+    return
+
+
+def on_open(ws):
+    symbols = Guild.select().dicts()
+
+    for symbol in symbols:
+        print("SYMBOL :", symbol)
+        ws.send('{"type":"subscribe","symbol":"{}"}'.format(symbol.symbol))
+
+
+def setup_stock_socket():
+    print("setting up socket")
+    # pylint: disable=assignment-from-no-return
+    websocket.enableTrace(True)
+    ws = websocket.WebSocketApp(
+        f"wss://ws.finnhub.io?token={FINNHUB_TOKEN}",
+        on_close=on_close,
+        on_open=on_open,
+        on_message=on_message,
+        on_error=on_error)
+    wst = threading.Thread(target=ws.run_forever)
+    wst.daemon = True
+    wst.start()
+    return
+
+
 def setup(bot):
     """
     Setup function for Cog class in file.
@@ -198,13 +265,7 @@ def setup(bot):
     Ran when cog is loaded VIA load_extension() in main.py
 
     The bot param is automatically passed in during loading
-
-    ...
-
-    Parameters
-    ----------
-    bot: Bot
-        Bot instance from main.py
     """
 
-    bot.add_cog(Stock(bot))
+    bot.add_cog(StockCog(bot))
+    # setup_stock_socket()

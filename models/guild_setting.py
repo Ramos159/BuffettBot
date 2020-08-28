@@ -1,11 +1,11 @@
-from peewee import Model, IntegerField, CharField, SqliteDatabase
-
+from peewee import Model, IntegerField, CharField, SqliteDatabase, ForeignKeyField
+from models import Guild
 
 db = SqliteDatabase('database.db')
 
 
 class GuildSetting(Model):
-    discord_ID = IntegerField()
+    guild = ForeignKeyField(Guild)
     prefix = CharField(default="?")
     news_channel_id = IntegerField(null=True)
 
